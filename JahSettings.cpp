@@ -7,14 +7,15 @@
 //
 
 #include "JahSettings.h"
+#include <QDir>
 
 JahSettings::JahSettings(QObject *parent) :
     QSettings("Sputnik7", "JahPlayer", parent)
 {
-    folderImages = value("folderImages", "../../images/clips").toString();
+    folderImages = value("folderImages", "../jahplayer/resources/images/clips").toString();
 
-    sqlitePath = value("sqlitePath", "../../database").toString();
-    sqliteName = value("sqliteName", "desktop").toString();
+    sqlitePath = value("sqlitePath", "../jahplayer/resources").toString();
+    sqliteName = value("sqliteName", "jahplayer").toString();
 }
 
 void JahSettings::loadGeometry(QString key, QWidget *w) {
