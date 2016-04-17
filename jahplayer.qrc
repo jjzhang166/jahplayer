@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/jahplayer-icon.png</file>
+        <file>resources/jahplayer-logo.jpg</file>
+    </qresource>
+</RCC>
