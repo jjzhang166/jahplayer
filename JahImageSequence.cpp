@@ -77,3 +77,8 @@ void JahImageSequence::setSequence(JahIdMedia id, QStringList images) {
     if (cache.size())
         cache[curr = 0].load(p);
 }
+
+void JahImageSequence::setCurrentFrame(int frame) {
+    if (frame >= 0 && frame < totFrames())
+        curr = frame;
+}

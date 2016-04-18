@@ -80,10 +80,10 @@ void JahPlayerUIControls::routeBehaviour(JahMediaPlayer *p) {
 
     connect(Play, &QAbstractButton::clicked, [this, p]() {
         auto v = p->videoOutput();
-        auto l = v->thumbnails_();
+        auto l = v->getThumbnails();
         if (auto i = l->current()) {
             i->start();
-            p->setMedia(i->reference);
+            p->setMedia(i->getReference());
             p->play();
             v->setFPS(fpsCurrent(-1));
             slider->setRange(0, i->totFrames());
@@ -107,6 +107,10 @@ void JahPlayerUIControls::routeBehaviour(JahMediaPlayer *p) {
         int durFrame = 1000 / fpsCurrent(-1);
         timeOffset->setText(pairs(times(pos * durFrame), times(slider->maximum() * durFrame)));
         frameCount->setText(pairs(zeroPad(pos), zeroPad(slider->maximum())));
+    });
+
+    connect(slider, &QSlider::sliderReleased, [p, this]() {
+        p->videoOutput()->getSequence()->setCurrentFrame(slider->value());
     });
 
     /*

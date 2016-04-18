@@ -53,7 +53,10 @@ public:
      *  DB loader
      */
     void setThumbnails(JahThumbnails *t) { thumbnails = t; }
-    JahThumbnails *thumbnails_() const { return thumbnails; }
+    JahThumbnails *getThumbnails() const { return thumbnails; }
+
+    /** get actual frame player to change on user request */
+    JahImageSequence* getSequence() const { return sequence; }
 
 signals:
     void durationChanged(qint64);

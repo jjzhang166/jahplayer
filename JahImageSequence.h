@@ -51,17 +51,33 @@ public:
      */
     void setSequence(JahIdMedia reference, QStringList images);
 
-    /** protocol of QMediaObject */
-    JahIdMedia reference;
+    /**
+     * @brief setCurrentFrame
+     *  change current image (played next) as required
+     * @param frame
+     *  in range frame index
+     */
+    void setCurrentFrame(int frame);
+
+    /** access protocol of QMediaObject */
+    const JahIdMedia &getReference() const { return reference; }
 
     /** user visible name */
-    QString name;
+    QString getUserVisibleName() const { return name; }
 
     /** load test data, from test folders */
     void loadFromFolder(QString folder);
 
+    /**
+     * @brief currentPosition
+     *  access index of next to play frame
+     */
     qint64 currentPosition() const { return curr; }
 
+    /**
+     * @brief totFrames
+     *  number of frames in full sequence
+     */
     qint64 totFrames() const { return cache.size(); }
 
 signals:
@@ -70,6 +86,9 @@ signals:
     void ready();
 
 private:
+
+    JahIdMedia reference;
+    QString name;
 
     struct frame {
         QString name;

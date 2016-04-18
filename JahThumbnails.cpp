@@ -37,7 +37,7 @@ JahImageSequence* JahThumbnails::current() {
 
 JahImageSequence *JahThumbnails::fromUrl(QUrl url) {
     for (auto s: sequences)
-        if (s->reference == url)
+        if (s->getReference() == url)
             return s;
     throw JahException(tr("no definition for %1").arg(url.toString()));
 }
