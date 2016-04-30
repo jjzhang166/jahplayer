@@ -43,13 +43,9 @@ QList<JahIdMedia> JahDatabase::allReferences() {
 }
 
 JahDatabase::definition JahDatabase::getDefinition(const JahIdMedia& id) {
-    qDebug() << id.toString();
-
     definition d { id, {} };
-
     auto s = QString("SELECT FileName,StartFrame,EndFrame,FileExtension FROM " T1
                      " WHERE MediaName='%1' AND MediaNumber=%2").arg(id.name()).arg(id.media());
-                     // " WHERE MediaName='%1' AND FileLocation='%2'").arg(id.name(), id.path());
     for (QSqlQuery q(s); q.next(); ) {
         auto FileName = q.value(0).toString();
         auto FileExt = q.value(3).toString();
@@ -60,6 +56,90 @@ JahDatabase::definition JahDatabase::getDefinition(const JahIdMedia& id) {
     }
     return d;
 }
+
+bool JahDatabase::addFolderImages(QString folder) {
+
+    QString Category = "test";
+    QString Cliptype = "reel";
+    QString Videoext = "MOV";
+
+    int MediaNumber = 0;
+    {   QSqlQuery q(database);
+        if (q.exec("SELECT MAX(MediaNumber) AS cmax FROM " T1) && q.next())
+            MediaNumber = q.value(0).toInt() + 1;
+    }
+
+    QString FileLocation = folder;
+    QDir dir(FileLocation);
+
+    QString MediaName;
+    MediaName = dir.path().split('/').last();
+
+    QString FileName;
+    QString FileExtension;
+    int StartFrame;
+    int EndFrame;
+    int xpos = 0;
+    int ypos = 0;
+
+    QSqlQuery query(database);
+    query.exec("BEGIN TRANSACTION");
+    query.prepare("INSERT INTO " T1 "("
+        "Category,Cliptype,Videoext,MediaName,MediaNumber,"
+        "FileLocation,FileName,FileExtension,"
+        "StartFrame,EndFrame,xpos,ypos"
+        ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
+    );
+
+    //! scan sorted entries for sequentially numbered images
+    StartFrame = EndFrame = -1;
+    FileName = FileExtension = "";
+    QString file_nonum, file_number;
+
+    QRegularExpression re("([\\w\\d_]+)_(\\d+)\\.(\\w+)");
+    for (auto name : dir.entryList(QDir::Files, QDir::Name)) {
+        auto mt = re.match(name);
+        if (mt.hasMatch()) {
+            auto l = mt.capturedTexts();
+            if (StartFrame == -1) {
+                file_nonum = l[1];
+                StartFrame = l[2].toInt();
+                FileExtension = l[3];
+                file_number = name.mid(0, mt.capturedStart(3) - 1);
+            }
+            else if (file_nonum == l[1] && FileExtension == l[3])
+                EndFrame = l[2].toInt();
+            else
+                qDebug() << "mismatch" << name << "with" << file_nonum << FileExtension;
+        }
+    }
+    if (EndFrame > StartFrame) {
+        //! replace numerics (like 0023) with $$$$
+        FileName = JahIdMedia::namePatternFromNumeric(file_number, file_nonum);
+        query.bindValue(0, Category);
+        query.bindValue(1, Cliptype);
+        query.bindValue(2, Videoext);
+        query.bindValue(3, MediaName);
+        query.bindValue(4, MediaNumber);
+        query.bindValue(5, FileLocation);
+        query.bindValue(6, FileName);
+        query.bindValue(7, FileExtension);
+        query.bindValue(8, StartFrame);
+        query.bindValue(9, EndFrame);
+
+        query.bindValue(10, xpos);  // ??
+        query.bindValue(11, ypos);
+        if (!query.exec())
+            throw JahException(tr("cannot insert record %1 in table " T1).arg(MediaNumber));
+
+        query.exec("END TRANSACTION");
+        qDebug() << "inserted " << MediaName << MediaNumber << FileLocation;
+        return true;
+    }
+    query.exec("ROLLBACK");
+    return false;
+}
+
 /*
 void JahDatabase::addTestImages(const JahSettings &settings) {
 

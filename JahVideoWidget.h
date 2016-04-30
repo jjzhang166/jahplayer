@@ -17,6 +17,7 @@
 #include <QMediaBindableInterface>
 
 #include "JahThumbnails.h"
+#include "JahEncoder.h"
 
 class JahVideoWidget : public QWidget, public QMediaBindableInterface
 {
@@ -31,6 +32,12 @@ public:
         supportedPixelFormats(QAbstractVideoBuffer::HandleType type = QAbstractVideoBuffer::NoHandle) const;
 
     virtual QMediaObject *mediaObject() const;
+
+    void removeHistogram();
+    void displayHistogram();
+
+    void enableEncoding(QString output_file);
+    void disableEncoding();
 
     /// workaround while learning about proper interfacing QMedia
     void play();
@@ -62,6 +69,8 @@ signals:
     void durationChanged(qint64);
     void positionChanged(qint64);
 
+    void frameAvailable(QVideoFrame frame);
+
 public slots:
 
 protected slots:
@@ -75,6 +84,8 @@ protected:
 
     JahImageSequence* sequence = 0;
     JahThumbnails* thumbnails = 0;
+
+    JahEncoder* encoder = 0;
 
     QTimer timer;
     QImage last_drawn;

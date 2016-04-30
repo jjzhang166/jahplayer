@@ -7,6 +7,7 @@
 //
 
 #include "JahVideoWidget.h"
+#include "JahHistogramWidget.h"
 #include <QPaintEngine>
 #include <QDebug>
 
@@ -27,6 +28,30 @@ QList<QVideoFrame::PixelFormat> JahVideoWidget::supportedPixelFormats(QAbstractV
 QMediaObject *JahVideoWidget::mediaObject() const {
     qDebug() << "mediaObject";
     return 0;
+}
+
+template <class T>
+inline T *findChildByClass(QWidget *parent) {
+    for (auto c : parent->children())
+        if (auto w = qobject_cast<T*>(c))
+            return w;
+    return nullptr;
+}
+
+void JahVideoWidget::removeHistogram() {
+    auto histo = findChildByClass<JahHistogramWidget>(this);
+    Q_ASSERT(histo);
+    delete histo;
+}
+
+void JahVideoWidget::displayHistogram() {
+    Q_ASSERT(!findChildByClass<JahHistogramWidget>(this));
+    auto histo = new JahHistogramWidget(this);
+    auto h = height(), w = width();
+    histo->resize(w, h / 8);
+    histo->move(0, h - h / 8);
+    histo->show();
+    connect(this, &JahVideoWidget::frameAvailable, histo, &JahHistogramWidget::processFrame);
 }
 
 bool JahVideoWidget::setMediaObject(QMediaObject *object) {
@@ -56,9 +81,8 @@ void JahVideoWidget::paintEvent(QPaintEvent *event) {
         auto i = sequence->next();
         if (!i.isNull()) {
             emit positionChanged(sequence->currentPosition());
-            qDebug() << "emit positionChanged(sequence->currentPosition());";
-
             drawImage(last_drawn = i);
+            emit frameAvailable(last_drawn);
             return;
         }
     }
@@ -74,29 +98,26 @@ void JahVideoWidget::pause() {
 }
 
 void JahVideoWidget::setMedia(QUrl url) {
-    /*
-    auto s = url.toString();
-    if (s.left(7) == "file://")
-        s = s.mid(7);
-    else if (s.left(5) == "file:")
-        s = s.mid(5);
-    else
-        return;
-
-    delete sequence;
-    sequence = new JahImageSequence();
-    //sequence->setFolder(s);
-    sequence->start();
-    */
     sequence = thumbnails->fromUrl(url);
     sequence->start();
-
     emit durationChanged(timer.interval() * sequence->totFrames());
 }
 
 void JahVideoWidget::setFPS(int fps) {
     timer.stop();
     timer.start(1000 / fps);
-
     emit durationChanged(timer.interval() * sequence->totFrames());
+}
+
+void JahVideoWidget::enableEncoding(QString output_file) {
+    if (!encoder) {
+        encoder = new JahEncoder;
+        if (encoder->open(output_file))
+            connect(this, &JahVideoWidget::frameAvailable, encoder, &JahEncoder::encode);
+    }
+}
+
+void JahVideoWidget::disableEncoding() {
+    delete encoder;
+    encoder = 0;
 }

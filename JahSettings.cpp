@@ -16,6 +16,14 @@ JahSettings::JahSettings(QObject *parent) :
 
     sqlitePath = value("sqlitePath", "../jahplayer/resources").toString();
     sqliteName = value("sqliteName", "jahplayer").toString();
+    openDbHistory = value("openDbHistory", QStringList()).toStringList();
+}
+
+void JahSettings::save() {
+    setValue("folderImages", folderImages);
+    setValue("sqlitePath", sqlitePath);
+    setValue("sqliteName", sqliteName);
+    setValue("openDbHistory", openDbHistory);
 }
 
 void JahSettings::loadGeometry(QString key, QWidget *w) {

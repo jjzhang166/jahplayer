@@ -28,10 +28,35 @@ public:
 
     explicit JahThumbnails(QWidget *parent = 0);
 
-    JahDatabase *database;
     JahImageSequence* current();
 
     JahImageSequence* fromUrl(QUrl url);
+
+    /**
+     * @brief db
+     *  the only media definition source
+     * @return
+     *  the current database
+     */
+    JahDatabase *db() const { return database; }
+
+    /**
+     * @brief connectToDb
+     *  get DB path from settings and open it
+     * @return
+     *  true if DB opened and assets found
+     */
+    bool connectToDb();
+
+    /**
+     * @brief addAssetDirToDb
+     *  store the sequence of images (only symbolic names) in DB
+     * @param folder
+     *  path of folder containing a correctly named images sequence
+     * @return
+     *  true if sequence added (folder name should be unique)
+     */
+    bool addAssetDirToDb(QString folder);
 
 signals:
 
@@ -40,6 +65,8 @@ signals:
 public slots:
 
 private:
+
+    JahDatabase *database = 0;
 
     void initFromFolder();
     void initFromDb();

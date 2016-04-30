@@ -8,7 +8,7 @@
 
 QT += core gui multimedia multimediawidgets widgets concurrent sql
 
-TARGET = video_from_images
+TARGET = jahplayer
 TEMPLATE = app
 
 SOURCES += \
@@ -24,7 +24,8 @@ SOURCES += \
     JahException.cpp \
     JahIdMedia.cpp \
     JahImageSequence.cpp \
-    JahHistogramWidget.cpp
+    JahHistogramWidget.cpp \
+    JahEncoder.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -38,7 +39,10 @@ HEADERS += \
     JahException.h \
     JahImageSequence.h \
     JahIdMedia.h \
-    JahHistogramWidget.h
+    JahHistogramWidget.h \
+    JahEncoder.h
+
+LIBS += -lavcodec -lswscale -lx264
 
 CONFIG += mobility
 MOBILITY =

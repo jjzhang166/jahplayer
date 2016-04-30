@@ -24,6 +24,10 @@ inline QString pairs(QString l, QString r, QChar sep = '/') {
 inline QString times(qint64 msec) {
     return QTime(QTime(0, 0).addMSecs(msec)).toString("hh:mm:ss.zzz");
 }
+inline void enable(QList<QWidget*> widgets, bool enabled) {
+    for (auto w: widgets)
+        w->setEnabled(enabled);
+}
 
 JahPlayerUIControls::JahPlayerUIControls(QWidget *parent) : QWidget(parent)
 {
@@ -36,6 +40,7 @@ JahPlayerUIControls::JahPlayerUIControls(QWidget *parent) : QWidget(parent)
         b->setIcon(style()->standardIcon(QStyle::SP_Media##c)); \
         b->setToolTip(#c); \
         b->setAutoRaise(true); \
+        b->setEnabled(false); \
         h->addWidget(c = b); \
     }
 
@@ -78,6 +83,7 @@ int JahPlayerUIControls::fpsCurrent(int index) const {
 
 void JahPlayerUIControls::routeBehaviour(JahMediaPlayer *p) {
 
+    enable({Play}, true);
     connect(Play, &QAbstractButton::clicked, [this, p]() {
         auto v = p->videoOutput();
         auto l = v->getThumbnails();
@@ -88,6 +94,8 @@ void JahPlayerUIControls::routeBehaviour(JahMediaPlayer *p) {
             v->setFPS(fpsCurrent(-1));
             slider->setRange(0, i->totFrames());
         }
+        enable({Play}, false);
+        enable({Stop, Pause, SkipForward, SkipBackward, SeekForward, SeekBackward, Volume, VolumeMuted}, true);
     });
     connect(Stop, &QAbstractButton::clicked, [p]() {
         p->stop();
@@ -96,17 +104,25 @@ void JahPlayerUIControls::routeBehaviour(JahMediaPlayer *p) {
         p->pause();
     });
 
-    connect(p, &QMediaPlayer::durationChanged, [](qint64 dur) {
-        qDebug() << "durationChanged" << dur;
-    });
-
-    //connect(p, &QMediaPlayer::positionChanged, [this](qint64 pos) {
-    //connect(p->videoOutput(), &JahVideoWidget::positionChanged, [this](qint64 pos) {
-    connect(p, &JahMediaPlayer::positionChanged, [this](qint64 pos) {
-        slider->setValue(pos);
+    auto setInfoPos = [this](qint64 pos) {
         int durFrame = 1000 / fpsCurrent(-1);
         timeOffset->setText(pairs(times(pos * durFrame), times(slider->maximum() * durFrame)));
         frameCount->setText(pairs(zeroPad(pos), zeroPad(slider->maximum())));
+    };
+
+    connect(p, &QMediaPlayer::durationChanged, [setInfoPos](qint64 dur) {
+        setInfoPos(dur);
+        qDebug() << "durationChanged" << dur;
+    });
+
+    connect(p, &JahMediaPlayer::positionChanged, [this, setInfoPos](qint64 pos) {
+        slider->setValue(pos);
+        setInfoPos(pos);
+        /*
+        int durFrame = 1000 / fpsCurrent(-1);
+        timeOffset->setText(pairs(times(pos * durFrame), times(slider->maximum() * durFrame)));
+        frameCount->setText(pairs(zeroPad(pos), zeroPad(slider->maximum())));
+        */
     });
 
     connect(slider, &QSlider::sliderReleased, [p, this]() {

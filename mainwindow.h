@@ -10,6 +10,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+class JahVideoWidget;
 
 /**
  * @brief The MainWindow class
@@ -19,8 +20,10 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-    void setupQtMedia();
     void setupJahMedia();
+    void setupCommands();
+
+    JahVideoWidget* videoWidget = 0;
 
 public:
     MainWindow(QWidget *parent = 0);

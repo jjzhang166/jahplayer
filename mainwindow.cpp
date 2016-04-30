@@ -11,38 +11,15 @@
 #include <QDebug>
 #include <QMenuBar>
 #include <QSplitter>
-
+#include <QFileDialog>
 #include <QMediaPlayer>
 #include <QVideoWidget>
 
-#include "JahMediaPlayer.h"
-#include "JahVideoWidget.h"
-
 #include "JahSettings.h"
 #include "JahThumbnails.h"
+#include "JahMediaPlayer.h"
+#include "JahVideoWidget.h"
 #include "JahPlayerUIControls.h"
-
-void MainWindow::setupQtMedia()
-{
-    auto v = new QVideoWidget;
-    setCentralWidget(v);
-
-    auto p = new QMediaPlayer;
-    p->setVideoOutput(v);
-
-    auto start = menuBar()->addAction("start");
-    connect(start, &QAction::triggered, [p]() {
-        qDebug() << "start";
-        p->setMedia(QUrl::fromLocalFile("/home/carlo/Videos/my/rosaspina/P1090585.MOV"));
-        p->play();
-    });
-
-    auto stop = menuBar()->addAction("stop");
-    connect(stop, &QAction::triggered, [p]() {
-        qDebug() << "stop";
-        p->stop();
-    });
-}
 
 void MainWindow::setupJahMedia() {
 
@@ -50,7 +27,7 @@ void MainWindow::setupJahMedia() {
     s->setHandleWidth(3);
     setCentralWidget(s);
 
-    auto v = new JahVideoWidget;
+    auto v = videoWidget = new JahVideoWidget;
     s->addWidget(v);
 
     auto c = new JahPlayerUIControls;
@@ -65,19 +42,71 @@ void MainWindow::setupJahMedia() {
     v->setThumbnails(l);
 
     c->routeBehaviour(p);
-    /*
-    connect(c->Play, &QAbstractButton::clicked, [p, l]() {
-        if (auto i = l->current()) {
-            i->start();
-            p->setMedia(l->current()->reference); //QUrl::fromLocalFile(l->current()->folder));
-            p->play();
+}
+
+void MainWindow::setupCommands() {
+    auto commands = menuBar()->addMenu(tr("Commands"));
+
+    auto selectDb = commands->addAction(tr("Select Db..."));
+    selectDb->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    connect(selectDb, &QAction::triggered, [&]() {
+        JahSettings settings;
+        QFileDialog fd(this, tr("Open or Create Db"), settings.sqlitePath);
+        fd.setNameFilters({tr("Jahshaka databases (*.jahdb)"), tr("Any file (*)")});
+        fd.setFileMode(QFileDialog::AnyFile);
+        fd.setViewMode(QFileDialog::Detail);
+        fd.setHistory(settings.openDbHistory);
+        if (fd.exec()) {
+            auto l = fd.selectedFiles();
+            if (l.size() == 1) {
+                auto dir = fd.directory();
+                settings.openDbHistory = fd.history();
+                settings.sqlitePath = dir.absolutePath();
+                settings.sqliteName = dir.relativeFilePath(l[0]);
+                settings.save();
+                videoWidget->getThumbnails()->connectToDb();
+            }
         }
     });
 
-    connect(c->Stop, &QAbstractButton::clicked, [p]() {
-        p->stop();
+    auto addAssetDirToDb = commands->addAction(tr("Add Asset to Db..."));
+    addAssetDirToDb->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    connect(addAssetDirToDb, &QAction::triggered, [&]() {
+        JahSettings settings;
+        QFileDialog fd(this, tr("Select a folder of image sequence"), settings.folderImages);
+        fd.setNameFilters({tr("Image Folder")});
+        fd.setFileMode(QFileDialog::DirectoryOnly);
+        fd.setViewMode(QFileDialog::Detail);
+        fd.setHistory(settings.openDbHistory);
+        if (fd.exec()) {
+            settings.openDbHistory = fd.history();
+            settings.folderImages = fd.directory().absolutePath();
+            settings.save();
+            videoWidget->getThumbnails()->addAssetDirToDb(settings.folderImages);
+        }
     });
-    */
+
+    //auto createDb = commands->addAction(tr("selectDb"));SP_DialogSaveButton
+
+    auto histogram = commands->addAction(tr("Histogram"));
+    histogram->setCheckable(true);
+
+    connect(histogram, &QAction::toggled, [&](bool checked) {
+        if (checked)
+            videoWidget->displayHistogram();
+        else
+            videoWidget->removeHistogram();
+    });
+
+    auto encode = commands->addAction(tr("Encode..."));
+    encode->setCheckable(true);
+    connect(encode, &QAction::toggled, [&](bool checked) {
+        if (checked) {
+            videoWidget->enableEncoding("/tmp/x.mov");
+        }
+        else
+            videoWidget->disableEncoding();
+    });
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -85,8 +114,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     JahSettings settings;
     settings.loadGeometry(this);
-    //setupQtMedia();
     setupJahMedia();
+    setupCommands();
 }
 
 MainWindow::~MainWindow()

@@ -66,7 +66,7 @@ public:
     QString getUserVisibleName() const { return name; }
 
     /** load test data, from test folders */
-    void loadFromFolder(QString folder);
+    bool loadFromFolder(QString folder);
 
     /**
      * @brief currentPosition

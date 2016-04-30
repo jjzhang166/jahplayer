@@ -67,6 +67,16 @@ public:
      */
     definition getDefinition(const JahIdMedia &id);
 
+    /**
+     * @brief addFolderImages
+     *  store the sequence of images (only symbolic names) in DB
+     * @param folder
+     *  path of folder containing a correctly named images sequence
+     * @return
+     *  true if sequence added (folder name should be unique)
+     */
+    bool addFolderImages(QString folder);
+
 private:
 
     /** physical storage, file path defined in JahSettings */

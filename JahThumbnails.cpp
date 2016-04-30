@@ -17,17 +17,34 @@
 JahThumbnails::JahThumbnails(QWidget *parent)
     : QListWidget(parent)
 {
-    try {
-        database = new JahDatabase(this);
-        initFromDb();
-    }
-    catch(JahException &e) {
-        QMessageBox::critical(this, tr("Error"), e.message);
-    }
+    connectToDb();
 
     setViewMode(IconMode);
     setIconSize(QSize(200, 200));
     setResizeMode(Adjust);
+}
+
+bool JahThumbnails::connectToDb() {
+    delete database;
+    try {
+        database = new JahDatabase(this);
+        initFromDb();
+        return true;
+    }
+    catch(JahException &e) {
+        QMessageBox::critical(this, tr("Error"), e.message);
+    }
+    return false;
+}
+
+bool JahThumbnails::addAssetDirToDb(QString folder) {
+    if (db()->addFolderImages(folder)) {
+        clear();
+        sequences.clear();
+        initFromDb();
+        return true;
+    }
+    return false;
 }
 
 JahImageSequence* JahThumbnails::current() {

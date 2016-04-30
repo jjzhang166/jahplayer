@@ -17,14 +17,17 @@ JahImageSequence::JahImageSequence(QObject *parent) : QObject(parent) {
 
 }
 
-void JahImageSequence::loadFromFolder(QString folder) {
+bool JahImageSequence::loadFromFolder(QString folder) {
 
     QDir dir(folder);
     for (auto name : dir.entryList({"*.jpg", "*.BMP"}, QDir::Files, QDir::Name))
          cache << frame { name, QImage() };
-
-    if (cache.size())
+    if (cache.size()) {
         cache[curr = 0].load(folder);
+        return true;
+    }
+
+    return false;
 }
 
 void JahImageSequence::start() {

@@ -33,6 +33,11 @@ public:
     /** name of global definitions SQLITE DB */
     QString sqliteName;
 
+    /** keep user browsing for DB history */
+    QStringList openDbHistory;
+
+    void save();
+
     /** helpers to save/restore windows placements */
     void loadGeometry(QWidget *w);
     void saveGeometry(QWidget *w);
