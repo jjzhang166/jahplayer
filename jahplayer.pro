@@ -40,7 +40,13 @@ HEADERS += \
     JahIdMedia.h \
     JahHistogramWidget.h
 
-# there are some difficulties building X264 on CentOS 7
+# there are some difficulties building X264 on CentOS 7:
+#
+# following https://trac.ffmpeg.org/wiki/CompilationGuide/Centos, chokes on
+#   git clone --depth 1 git://git.videolan.org/x264
+# with message
+#   fatal: Could not read from remote repository
+#
 defined(_JAH_USE_X264_ENCODER_) {
     SOURCES += JahEncoder.cpp
     HEADERS += JahEncoder.h
