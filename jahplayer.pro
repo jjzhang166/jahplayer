@@ -24,8 +24,7 @@ SOURCES += \
     JahException.cpp \
     JahIdMedia.cpp \
     JahImageSequence.cpp \
-    JahHistogramWidget.cpp \
-    JahEncoder.cpp
+    JahHistogramWidget.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -39,10 +38,14 @@ HEADERS += \
     JahException.h \
     JahImageSequence.h \
     JahIdMedia.h \
-    JahHistogramWidget.h \
-    JahEncoder.h
+    JahHistogramWidget.h
 
-LIBS += -lavcodec -lswscale -lx264
+# there are some difficulties building X264 on CentOS 7
+defined(_JAH_USE_X264_ENCODER_) {
+    SOURCES += JahEncoder.cpp
+    HEADERS += JahEncoder.h
+    LIBS += -lavcodec -lswscale -lx264
+}
 
 CONFIG += mobility
 MOBILITY =

@@ -111,13 +111,17 @@ void JahVideoWidget::setFPS(int fps) {
 
 void JahVideoWidget::enableEncoding(QString output_file) {
     if (!encoder) {
+#ifdef _JAH_USE_X264_ENCODER_
         encoder = new JahEncoder;
         if (encoder->open(output_file))
             connect(this, &JahVideoWidget::frameAvailable, encoder, &JahEncoder::encode);
+#endif
     }
 }
 
 void JahVideoWidget::disableEncoding() {
+#ifdef _JAH_USE_X264_ENCODER_
     delete encoder;
     encoder = 0;
+#endif
 }

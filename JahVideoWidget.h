@@ -17,7 +17,13 @@
 #include <QMediaBindableInterface>
 
 #include "JahThumbnails.h"
+
+//! there are some difficulties building X264 on CentOS 7
+#ifdef _JAH_USE_X264_ENCODER_
 #include "JahEncoder.h"
+#else
+class JahEncoder {};
+#endif
 
 class JahVideoWidget : public QWidget, public QMediaBindableInterface
 {
@@ -85,6 +91,7 @@ protected:
     JahImageSequence* sequence = 0;
     JahThumbnails* thumbnails = 0;
 
+    //! there are some difficulties building X264 on CentOS 7
     JahEncoder* encoder = 0;
 
     QTimer timer;
